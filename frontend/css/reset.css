@@ -1,0 +1,98 @@
+/* ============================================================
+   MAGAZINE EDITORIAL — Design Tokens
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Palette — warm editorial */
+  --ivory:         #FCF9F4;
+  --ivory-deep:    #F5EFE5;
+  --camel:         #C49A6C;
+  --camel-light:   #D9BFA0;
+  --camel-dim:     rgba(196, 154, 108, 0.12);
+  --rust:          #D4652A;
+  --rust-deep:     #B8451A;
+  --rust-dim:      rgba(212, 101, 42, 0.1);
+  --forest:        #1C3428;
+  --forest-soft:   #3A5C4A;
+  --forest-dim:    rgba(28, 52, 40, 0.08);
+  --ink:           #1E1B18;
+  --ink-soft:      #5C5650;
+  --ink-muted:     #8B7E6C;
+  --ink-faint:     #B8AFA3;
+
+  /* Status */
+  --success:       #2D7A4F;
+  --success-dim:   rgba(45, 122, 79, 0.1);
+  --warning:       #B8780A;
+  --warning-dim:   rgba(184, 120, 10, 0.1);
+  --error:         #D6403A;
+  --error-dim:     rgba(214, 64, 58, 0.08);
+  --info:          #3B6FA8;
+  --info-dim:      rgba(59, 111, 168, 0.08);
+
+  /* Borders */
+  --border:        #E5DDD2;
+  --border-heavy:  #D4C8B5;
+
+  /* Shadows — dramatic editorial */
+  --shadow-xs:     0 1px 2px rgba(30,27,24,0.03);
+  --shadow-sm:     0 2px 8px rgba(30,27,24,0.06);
+  --shadow-md:     0 8px 30px rgba(30,27,24,0.10);
+  --shadow-lg:     0 16px 50px rgba(30,27,24,0.14);
+
+  /* Typography — Playfair Display */
+  --font-display:  'Bodoni Moda', 'Noto Serif SC', 'Georgia', serif;
+  --font-body:     -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+  --font-mono:     'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+
+  /* Motion */
+  --ease-out:      cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --dur-fast:      150ms;
+  --dur:           280ms;
+  --dur-slow:      450ms;
+  --dur-page:      600ms;
+
+  /* Layout */
+  --content-max:   960px;
+  --topbar-h:      56px;
+  --main-px:       48px;
+  --main-py:       56px;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.9375rem;
+  background: var(--ivory);
+  color: var(--ink);
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--rust-dim);
+  color: var(--rust-deep);
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: 2px; }
+
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.text-secondary { color: var(--ink-soft); }
+.text-sm { font-size: 0.85rem; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
