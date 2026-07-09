@@ -9,9 +9,9 @@ export function renderLoginPage() {
     <div class="auth-shell">
       <!-- Hero — 杂志封面左半 -->
       <div class="auth-hero">
-        <h1><em>AI</em><br>学习助手</h1>
+        <h1><em>学习</em><br>助手</h1>
         <div class="hero-line"></div>
-        <p class="hero-sub">产品PM专版</p>
+        <p class="hero-sub">全科版</p>
         <p class="hero-tagline">让每一份学习资料<br>都成为你的知识资产</p>
       </div>
       <!-- Form — 窄栏表单 -->
@@ -48,9 +48,9 @@ export function renderRegisterPage() {
   app.innerHTML = `
     <div class="auth-shell">
       <div class="auth-hero">
-        <h1><em>AI</em><br>学习助手</h1>
+        <h1><em>学习</em><br>助手</h1>
         <div class="hero-line"></div>
-        <p class="hero-sub">产品PM专版</p>
+        <p class="hero-sub">全科版</p>
         <p class="hero-tagline">开始构建<br>你的知识体系</p>
       </div>
       <div class="auth-form-col">
@@ -105,7 +105,7 @@ async function handleLogin() {
     }
     localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('user', JSON.stringify(data.user));
-    window.location.hash = '#/chat';
+    window.location.hash = '#/dashboard';
     window.location.reload();
   } catch (e) {
     showAuthError(e.message);
@@ -147,7 +147,7 @@ async function handleRegister() {
     localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('user', JSON.stringify(data.user));
     showToast('注册成功！');
-    window.location.hash = '#/chat';
+    window.location.hash = '#/dashboard';
     window.location.reload();
   } catch (e) {
     showAuthError(e.message);

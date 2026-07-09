@@ -4,7 +4,7 @@ flask-cors==5.0.1
 openai==1.68.2
 
 # === 向量数据库 ===
-chromadb==1.0.8
+chromadb==1.2.2
 sentence-transformers==4.1.0
 
 # === 文档解析 ===
@@ -22,6 +22,14 @@ requests==2.32.3
 # === 工具 ===
 python-dotenv==1.1.0
 python-dateutil==2.9.0
+
+# === API 文档与安全 ===
+flasgger==0.9.7.1
+Flask-Limiter==3.8.0
+
+# === 资讯追踪 ===
+beautifulsoup4==4.12.3
+feedparser==6.0.11
 
 # === 测试 ===
 pytest==8.4.0

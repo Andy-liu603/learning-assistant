@@ -7,20 +7,9 @@ from pathlib import Path
 # 项目根目录
 BASE_DIR = Path(__file__).parent
 
-# 自动加载 .env 文件（任何方式启动都能读到）
-_env_file = BASE_DIR / ".env"
-if _env_file.exists():
-    for line in _env_file.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if "=" in line:
-            key, _, value = line.partition("=")
-            key = key.strip()
-            value = value.strip().strip("\"'")
-            # 不覆盖已有的环境变量（系统环境变量优先）
-            if key not in os.environ:
-                os.environ[key] = value
+# 使用 python-dotenv 加载 .env 文件
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / ".env")
 
 # ── LLM：DeepSeek（文本模型）──
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
@@ -77,7 +66,7 @@ FLASK_PORT = int(os.getenv("FLASK_PORT", "5000"))
 FLASK_DEBUG = os.getenv("FLASK_DEBUG", "true").lower() == "true"
 
 # JWT
-JWT_SECRET = os.getenv("JWT_SECRET", "ai-learning-secret-change-in-production")
+JWT_SECRET = os.getenv("JWT_SECRET", "")
 JWT_EXPIRE_DAYS = int(os.getenv("JWT_EXPIRE_DAYS", "7"))
 
 # 日志
@@ -116,3 +105,4 @@ for d in [UPLOAD_DIR, VECTOR_DB_DIR, REPORT_DIR, DATA_DIR]:
 
 # 每周报告生成时间（周几，0=周一）
 REPORT_WEEKDAY = int(os.getenv("REPORT_WEEKDAY", "0"))
+NEWS_FETCH_TIMEOUT = int(os.getenv("NEWS_FETCH_TIMEOUT", "15"))

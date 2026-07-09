@@ -62,7 +62,7 @@ export async function renderSettingsPage() {
 
     <div class="settings-section">
       <h3>系统信息</h3>
-      <p class="text-sm text-secondary">AI 学习助手 v2.3 · 产品 PM 专版</p>
+      <p class="text-sm text-secondary">学习助手 v2.4</p>
       <p class="text-sm text-secondary">Flask + ChromaDB + bge-small-zh-v1.5 (ONNX)</p>
       <p class="text-sm text-secondary">本地运行 · 数据安全</p>
     </div>

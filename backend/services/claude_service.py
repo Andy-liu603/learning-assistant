@@ -86,24 +86,28 @@ class LLMService:
         self.model = config.LLM_MODEL
         self.max_tokens = config.LLM_MAX_TOKENS
 
-        self.system_prompt = """你是一个专为AI产品经理设计的个人学习助手。
+        self.system_prompt = """你是一个全科全能个人学习助手。
 
 ## 身份
-- 精通PM方法论（用户故事、优先级矩阵、MVP设计）
-- 熟悉AI产品设计（Prompt Engineering、模型评估、数据飞轮）
-- 了解技术底层（大模型原理、RAG、Fine-tuning）
+- 通用学科学习伴侣，覆盖文、理、工、商、医、法、艺术等全领域
+- 精通学习方法论：费曼学习法、间隔重复、主动回忆、知识图谱构建
+- 具备跨领域知识迁移能力：能将复杂概念类比化、结构化讲解
+
+## 角色适应性
+- 根据用户当前学习领域自动调整知识深度与回答风格
+- 理科/工科：逻辑链拆解、公式推导、实验思维
+- 文科/社科：论点分析、文本解读、思辨引导
+- 商科/管理：案例驱动、框架思维（SWOT、波特五力等）
+- 语言学习：渐进式纠错、语境教学
 
 ## 回答风格
 - 直接、有洞察，不废话
-- 用PM语言组织回答（价值主张、用户场景、权衡取舍）
+- 用结构化方式组织回答（分点、表格、对比）
 - 技术概念用类比解释
-- 结构化输出（分点、表格、对比）
+- 主动识别用户薄弱环节，推荐针对性练习
 
 ## 当前任务
 基于用户上传的学习资料，回答问题。如果提供了上下文片段，优先基于资料内容回答；如果资料中没有相关信息，可以基于你的知识补充，但需明确标注"（补充知识）"。
-
-## 记忆上下文
-你会在对话中记住用户的困惑点，主动识别薄弱知识点。
 """
 
         self.quiz_prompt = """你是一个专业的学习测评出题系统。
@@ -281,6 +285,33 @@ class LLMService:
             source_chunks=context_chunks, user_id=user_id
         )
 
+    def stream_generate(self, system_prompt: str, user_message: str, max_tokens: int = None):
+        """
+        通用流式生成 — 不绑定对话/不写DB，纯 generator
+        用于资讯综合报告等非对话场景的流式输出
+        """
+        import httpx
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message}
+        ]
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self._resolve_model(),
+                max_tokens=max_tokens or self.max_tokens,
+                messages=messages,
+                stream=True
+            )
+            for chunk in response:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+        except (httpx.ConnectError, httpx.ReadTimeout, ConnectionError, OSError) as e:
+            yield f"网络连接失败: {e}"
+        except Exception as e:
+            yield f"错误: {str(e)}"
+
     def chat_with_image(self, image_base64: str, question: str, context: str = "") -> str:
         """
         多模态对话 — 自动路由到多模态视觉模型
@@ -341,7 +372,7 @@ class LLMService:
 要求：
 1. 题型混合：选择题、简答题、判断题
 2. 每题附带答案和解析
-3. 用PM思维设计题目（场景化、应用导向）
+3. 用场景化、应用导向的方式设计题目
 4. 标注考查的知识点
 
 输出JSON格式：

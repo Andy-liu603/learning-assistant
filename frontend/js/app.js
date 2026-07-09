@@ -5,7 +5,10 @@ import { renderLoginPage, renderRegisterPage } from './auth.js';
 
 // 页面模块映射
 const pages = {
+  dashboard: () => import('./pages/dashboard.js').then(m => m.renderDashboardPage()),
   chat: () => import('./pages/chat.js').then(m => m.renderChatPage()),
+  plan: () => import('./pages/plan.js').then(m => m.renderPlanPage()),
+  news: () => import('./pages/news.js').then(m => m.renderNewsPage()),
   library: () => import('./pages/library.js').then(m => m.renderLibraryPage()),
   progress: () => import('./pages/progress.js').then(m => m.renderProgressPage()),
   report: () => import('./pages/report.js').then(m => m.renderReportPage()),
@@ -17,7 +20,7 @@ const pages = {
 const publicPages = ['login', 'register'];
 
 function getCurrentPage() {
-  const hash = window.location.hash.slice(2) || 'chat';
+  const hash = window.location.hash.slice(2) || 'dashboard';
   const [page, ...rest] = hash.split('?');
   return page;
 }
@@ -32,9 +35,9 @@ async function route() {
     return;
   }
 
-  // 已登录但访问登录页 → 跳转 chat
+  // 已登录但访问登录页 -> 跳转 dashboard
   if (isLoggedIn() && publicPages.includes(page)) {
-    window.location.hash = '#/chat';
+    window.location.hash = '#/dashboard';
     return;
   }
 
@@ -71,8 +74,8 @@ async function route() {
       console.error(e);
     }
   } else {
-    // 默认跳转 chat
-    window.location.hash = '#/chat';
+    // 默认跳转 dashboard
+    window.location.hash = '#/dashboard';
   }
 }
 

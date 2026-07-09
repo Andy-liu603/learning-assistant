@@ -3,13 +3,14 @@ Flask 应用入口
 """
 import sys
 import os
+import uuid
 from pathlib import Path
 
 # 确保项目根目录在路径中
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from flask import Flask, jsonify, send_from_directory, request
+from flask import Flask, jsonify, send_from_directory, request, g
 from flask_cors import CORS
 import json as _json
 import config
@@ -23,14 +24,70 @@ from routes.chat_routes import chat_bp
 from routes.progress_routes import progress_bp
 from routes.quiz_routes import quiz_bp
 from routes.auth_routes import auth_bp
+from routes.news_routes import news_bp
+from routes.dashboard_routes import dashboard_bp
+from routes.plan_routes import plan_bp
 
 
 def create_app():
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB 文件上传限制
 
+    # JWT_SECRET 安全性检查
+    if not config.JWT_SECRET:
+        import secrets
+        config.JWT_SECRET = secrets.token_hex(32)
+        log.warning("JWT_SECRET 未配置，已自动生成随机密钥。生产环境请将其写入 .env 文件。")
+
     # CORS 跨域（允许 Authorization header）
     CORS(app, resources={r"/*": {"origins": "*", "expose_headers": ["Authorization"]}})
+
+    # Flasgger Swagger API 文档
+    try:
+        from flasgger import Swagger
+        swagger_config = {
+            "headers": [],
+            "specs": [{"endpoint": "apispec", "route": "/apispec.json"}],
+            "static_url_path": "/flasgger_static",
+            "swagger_ui": True,
+            "specs_route": "/api/docs/"
+        }
+        Swagger(app, config=swagger_config)
+        log.info("Swagger API 文档已启用: /api/docs/")
+    except ImportError:
+        log.warning("Flasgger 未安装，跳过 Swagger 文档")
+
+    # Flask-Limiter 速率限制
+    try:
+        from flask_limiter import Limiter
+        from flask_limiter.util import get_remote_address
+        limiter = Limiter(
+            key_func=get_remote_address,
+            default_limits=["500 per day", "100 per hour"],
+            storage_uri="memory://",
+            strategy="fixed-window"
+        )
+        limiter.init_app(app)
+        log.info("速率限制已启用")
+    except ImportError:
+        log.warning("Flask-Limiter 未安装，跳过速率限制")
+        limiter = None
+
+    # Request ID 中间件
+    @app.before_request
+    def assign_request_id():
+        g.request_id = str(uuid.uuid4())[:8]
+
+    @app.after_request
+    def log_request(response):
+        if not request.path.startswith('/api/'):
+            return response
+        log_msg = f"[{g.get('request_id', '-')}] {request.method} {request.path} -> {response.status_code}"
+        if response.status_code >= 400:
+            log.warning(log_msg)
+        else:
+            log.info(log_msg)
+        return response
 
     # 注册路由（必须在通配路由之前，确保 API 优先）
     app.register_blueprint(auth_bp)
@@ -38,6 +95,9 @@ def create_app():
     app.register_blueprint(chat_bp)
     app.register_blueprint(progress_bp)
     app.register_blueprint(quiz_bp)
+    app.register_blueprint(news_bp)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(plan_bp)
 
     # 前端静态文件服务
     frontend_dir = project_root / "frontend"
@@ -67,7 +127,7 @@ def create_app():
         multimodal_configured = bool(config.MULTIMODAL_API_KEY)
         return jsonify({
             "status": "healthy",
-            "version": "2.2.0",
+            "version": "2.4.0",
             "llm_configured": bool(config.LLM_API_KEY),
             "llm_model": config.LLM_MODEL,
             "multimodal_configured": multimodal_configured
@@ -215,7 +275,7 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    log.info(f"AI Learning Assistant v2.0 启动中...")
+    log.info(f"学习助手 v2.4 启动中...")
     log.info(f"  API: http://{config.FLASK_HOST}:{config.FLASK_PORT}")
     configured = bool(config.LLM_API_KEY)
     log.info(f"  LLM configured: {'YES' if configured else 'NO'}")

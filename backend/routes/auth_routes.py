@@ -16,7 +16,37 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
-    """用户注册"""
+    """用户注册
+    ---
+    tags:
+      - 认证
+    parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+          required:
+            - username
+            - email
+            - password
+          properties:
+            username:
+              type: string
+              description: 用户名，2-30个字符
+            email:
+              type: string
+              description: 邮箱地址
+            password:
+              type: string
+              description: 密码，至少6个字符
+    responses:
+      201:
+        description: 注册成功，返回JWT token
+      400:
+        description: 参数校验失败
+      409:
+        description: 用户名或邮箱已存在
+    """
     data = request.get_json(silent=True) or {}
     username = (data.get("username") or "").strip()
     email = (data.get("email") or "").strip()
@@ -72,7 +102,33 @@ def register():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    """用户登录"""
+    """用户登录
+    ---
+    tags:
+      - 认证
+    parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+              description: 用户名或邮箱
+            password:
+              type: string
+              description: 密码
+    responses:
+      200:
+        description: 登录成功，返回JWT token
+      400:
+        description: 用户名或密码为空
+      401:
+        description: 用户名或密码错误
+    """
     data = request.get_json(silent=True) or {}
     username = (data.get("username") or "").strip()
     password = data.get("password") or ""

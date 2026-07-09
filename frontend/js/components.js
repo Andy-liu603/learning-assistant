@@ -19,7 +19,10 @@ export function createEl(tag, attrs = {}, children = []) {
 
 export function renderTopbar(activeTab) {
   const tabs = [
+    { id: 'dashboard', label: '仪表盘' },
     { id: 'chat', label: '对话' },
+    { id: 'plan', label: '学习计划' },
+    { id: 'news', label: '资讯' },
     { id: 'library', label: '资料库' },
     { id: 'quiz', label: '测评' },
     { id: 'progress', label: '进度' },
@@ -31,7 +34,7 @@ export function renderTopbar(activeTab) {
 
   const topbar = document.getElementById('topbar');
   topbar.innerHTML = `
-    <div class="topbar-brand" onclick="window.location.hash='#/chat'"><em>AI</em> 学习助手</div>
+    <div class="topbar-brand" onclick="window.location.hash='#/dashboard'"><em>学习</em>助手</div>
     <div class="topbar-nav">
       ${tabs.map(t => `
         <button class="topbar-tab ${t.id === activeTab ? 'active' : ''}"
