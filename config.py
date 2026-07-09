@@ -63,7 +63,7 @@ if not LLM_API_KEY and os.getenv("ANTHROPIC_API_KEY"):
 # Flask
 FLASK_HOST = os.getenv("FLASK_HOST", "127.0.0.1")
 FLASK_PORT = int(os.getenv("FLASK_PORT", "5000"))
-FLASK_DEBUG = os.getenv("FLASK_DEBUG", "true").lower() == "true"
+FLASK_DEBUG = os.getenv("FLASK_DEBUG", "false").lower() == "true"
 
 # JWT
 JWT_SECRET = os.getenv("JWT_SECRET", "")

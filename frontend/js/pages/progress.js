@@ -2,7 +2,7 @@
 
 import { api } from '../api.js';
 import { renderTopbar, showEmpty } from '../components.js';
-import { showToast } from '../utils.js';
+import { showToast, escapeHtml } from '../utils.js';
 
 const L = { 0: "未接触", 1: "入门", 2: "熟悉", 3: "精通", 4: "专家" };
 const LC = { 0: "#9CA3AF", 1: "#F59E0B", 2: "#3B82F6", 3: "#22C55E", 4: "#8B5CF6" };
@@ -200,8 +200,8 @@ function renderKnowledgePoints(d) {
   el.innerHTML = kps.map(kp => `
     <div class="kp-item">
       <div class="kp-info">
-        <span class="kp-name">${kp.topic}</span>
-        <span class="kp-source text-xs text-secondary">${kp.source_file || ''}</span>
+        <span class="kp-name">${escapeHtml(kp.topic)}</span>
+        <span class="kp-source text-xs text-secondary">${escapeHtml(kp.source_file || '')}</span>
       </div>
       <span class="kp-level" style="color:${kp.level_color}">L${kp.level} ${kp.level_name}</span>
       <div class="kp-bar">
@@ -224,7 +224,7 @@ function renderDocMastery(d) {
   el.innerHTML = docs.map(doc => `
     <div class="expander">
       <div class="expander-header">
-        <span class="doc-mastery-name">${doc.filename}</span>
+        <span class="doc-mastery-name">${escapeHtml(doc.filename)}</span>
         <span class="kp-level" style="color:${doc.level_color}">L${doc.level} ${doc.level_name}</span>
         <span class="expander-arrow">+</span>
       </div>
@@ -256,10 +256,10 @@ function renderWeakPoints(d) {
       ${weak.map(p => `
         <li>
           <div>
-            <strong>${p.topic || '未知'}</strong>
+            <strong>${escapeHtml(p.topic || '未知')}</strong>
             <span class="kp-level" style="color:${p.level_color};margin-left:10px">L${p.level} ${p.level_name}</span>
           </div>
-          <span class="text-sm text-secondary">正确率 ${p.mastery_rate}% · 来源：${p.source_file || '未知'}</span>
+          <span class="text-sm text-secondary">正确率 ${p.mastery_rate}% · 来源：${escapeHtml(p.source_file || '未知')}</span>
         </li>
       `).join('')}
     </ul>

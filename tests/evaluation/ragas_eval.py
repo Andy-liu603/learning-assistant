@@ -16,8 +16,10 @@ import argparse
 from datetime import datetime
 from typing import List, Dict, Tuple, Optional
 
-# 项目根目录加入 path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# 项目根目录 + backend 加入 path
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, _ROOT)
+sys.path.insert(0, os.path.join(_ROOT, "backend"))
 
 from config import BASE_DIR
 
@@ -394,7 +396,7 @@ def run_evaluation(
         包含每个问题和整体汇总的评估结果字典
     """
     pipeline = RAGPipeline()
-    metrics = RAGMetrics()
+    metrics = RAGASMetrics()
 
     results = []
     total = len(questions)

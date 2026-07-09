@@ -2,7 +2,7 @@
 
 import { api } from '../api.js';
 import { renderTopbar, showEmpty } from '../components.js';
-import { showToast } from '../utils.js';
+import { showToast, escapeHtml } from '../utils.js';
 
 export function renderQuizPage() {
   renderTopbar('quiz');
@@ -108,7 +108,7 @@ function renderQuizQuestions(assessmentId, questions) {
           <span class="badge ${q.question_type === 'choice' ? 'badge-info' : q.question_type === 'true_false' ? 'badge-warning' : 'badge-success'}">${q.question_type === 'choice' ? '选择题' : q.question_type === 'true_false' ? '判断题' : '简答题'}</span>
           <span class="text-xs text-secondary">难度: ${q.difficulty === 'easy' ? '简单' : q.difficulty === 'hard' ? '较难' : '中等'}</span>
         </div>
-        <div class="q-text"><span class="q-num">${i + 1}.</span>${q.question_text}</div>
+        <div class="q-text"><span class="q-num">${i + 1}.</span>${escapeHtml(q.question_text)}</div>
         ${renderQuestionOptions(q)}
       </div>
     `).join('')}
@@ -210,10 +210,10 @@ async function submitQuiz(assessmentId) {
                 <span class="feedback-icon" style="color:${color}">${icon}</span>
                 <span class="badge ${correct ? 'badge-success' : 'badge-error'}">${r.score === 1 ? '满分' : r.score > 0 ? scorePercent + '%' : '0分'}</span>
               </div>
-              <div class="q-text" style="font-size:1rem;margin-top:8px">${i + 1}. ${r.question || ''}</div>
-              ${r.user_answer ? `<p class="text-sm mt-1" style="color:var(--ink-soft)">你的答案：${r.user_answer}</p>` : ''}
-              ${!correct ? `<p class="text-sm mt-1" style="color:var(--success);font-weight:600">正确答案：${r.correct_answer || '见解析'}</p>` : ''}
-              <p class="text-sm mt-1" style="color:var(--ink-soft);line-height:1.7">${r.feedback || ''}</p>
+              <div class="q-text" style="font-size:1rem;margin-top:8px">${i + 1}. ${escapeHtml(r.question || '')}</div>
+              ${r.user_answer ? `<p class="text-sm mt-1" style="color:var(--ink-soft)">你的答案：${escapeHtml(r.user_answer)}</p>` : ''}
+              ${!correct ? `<p class="text-sm mt-1" style="color:var(--success);font-weight:600">正确答案：${escapeHtml(r.correct_answer || '见解析')}</p>` : ''}
+              <p class="text-sm mt-1" style="color:var(--ink-soft);line-height:1.7">${escapeHtml(r.feedback || '')}</p>
               ${r.knowledge_point ? `<span class="badge badge-info mt-1">${r.knowledge_point}</span>` : ''}
             </div>
           `;

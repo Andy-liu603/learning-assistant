@@ -2,7 +2,7 @@
 
 import { api } from '../api.js';
 import { renderTopbar, showConfirm, showEmpty } from '../components.js';
-import { getStatusBadge, getProgressLabel, showToast, formatDate } from '../utils.js';
+import { getStatusBadge, getProgressLabel, showToast, formatDate, escapeHtml } from '../utils.js';
 
 export function renderLibraryPage() {
   renderTopbar('library');
@@ -91,7 +91,7 @@ async function loadDocuments() {
       return `
       <div class="doc-item" data-id="${d.id}">
         <div class="doc-info">
-          <div class="doc-name">${d.filename}</div>
+          <div class="doc-name">${escapeHtml(d.filename)}</div>
           <div class="doc-meta">
             ${getStatusBadge(d.status)}${d.file_category === 'multimodal' ? ' <span class="badge badge-info">多模态</span>' : ''}
             <span>${d.chunk_count || 0} 片段</span>
@@ -182,7 +182,7 @@ async function viewDocument(docId) {
     panel.innerHTML = `
       <div class="doc-detail-panel">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <h3>${d.filename}</h3>
+          <h3>${escapeHtml(d.filename)}</h3>
           <button class="btn btn-sm btn-ghost" onclick="document.getElementById('docDetail').classList.add('hidden')">关闭</button>
         </div>
         <dl class="doc-detail-meta">
@@ -199,7 +199,7 @@ async function viewDocument(docId) {
             ${data.chunks.map((c, i) => `
               <div class="doc-chunk-item">
                 <div class="chunk-idx">片段 ${i + 1}</div>
-                <div>${c.content ? c.content.slice(0, 300) + (c.content.length > 300 ? '...' : '') : '(空)'}</div>
+                <div>${escapeHtml(c.content ? c.content.slice(0, 300) + (c.content.length > 300 ? '...' : '') : '(空)')}</div>
               </div>
             `).join('')}
           </div>

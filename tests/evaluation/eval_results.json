@@ -1,0 +1,17 @@
+{
+  "accuracy": 8.0,
+  "completeness": 7.0,
+  "overall": 7.5,
+  "details": [
+    {
+      "q": "什么是PRD？包含哪些核心部分？",
+      "accuracy": 8,
+      "completeness": 7
+    },
+    {
+      "q": "什么是MVP？其作用是什么？",
+      "accuracy": 8,
+      "completeness": 7
+    }
+  ]
+}

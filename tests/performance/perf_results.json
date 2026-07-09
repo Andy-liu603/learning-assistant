@@ -1,0 +1,49 @@
+{
+  "results": [
+    {
+      "path": "/api/health",
+      "method": "GET",
+      "min_ms": 2.8,
+      "max_ms": 3.8,
+      "avg_ms": 3.4,
+      "p95_ms": 3.8,
+      "status_codes": [
+        200
+      ]
+    },
+    {
+      "path": "/api/documents",
+      "method": "GET",
+      "min_ms": 6.9,
+      "max_ms": 8.8,
+      "avg_ms": 7.8,
+      "p95_ms": 8.8,
+      "status_codes": [
+        200
+      ]
+    },
+    {
+      "path": "/api/dashboard/overview",
+      "method": "GET",
+      "min_ms": 27.0,
+      "max_ms": 30.5,
+      "avg_ms": 28.9,
+      "p95_ms": 30.5,
+      "status_codes": [
+        200
+      ]
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "min_ms": 150.5,
+      "max_ms": 166.4,
+      "avg_ms": 162.6,
+      "p95_ms": 166.4,
+      "status_codes": [
+        200
+      ]
+    }
+  ],
+  "all_pass": true
+}
