@@ -14,7 +14,7 @@ import feedparser
 import config
 from models.database import NewsDAO, RssSourceDAO, KnowledgeDAO, get_db
 from services.document_service import DocumentService
-from services.claude_service import LLMService
+from services.llm_service import LLMService
 from backend.utils.logger import log
 
 

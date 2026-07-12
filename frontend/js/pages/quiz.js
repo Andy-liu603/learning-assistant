@@ -24,8 +24,12 @@ export function renderQuizPage() {
           <label class="form-label">题目数量</label>
           <select id="quizCount" class="form-select">
             <option value="4">4 题（快速）</option>
+            <option value="6">6 题</option>
             <option value="8" selected>8 题（标准）</option>
+            <option value="10">10 题</option>
             <option value="12">12 题（全面）</option>
+            <option value="15">15 题</option>
+            <option value="20">20 题（深度）</option>
           </select>
         </div>
         <button id="startQuizBtn" class="btn btn-primary" style="align-self:flex-end">开始测评</button>
@@ -268,23 +272,67 @@ function updateStepStatus(container, key, status) {
 
 async function loadHistory() {
   try {
-    const data = await api.get('/assessments/history', { limit: 10 });
+    const data = await api.get('/assessments/history', { limit: 20 });
     const el = document.getElementById('quizHistory');
     if (data && data.assessments && data.assessments.length) {
       el.innerHTML = `
         <h3 class="section-title">测评历史</h3>
         ${data.assessments.map(a => `
-          <div class="expander">
+          <div class="expander" data-id="${a.id}">
             <div class="expander-header">
               <span style="display:flex;align-items:center;gap:12px">
                 <span class="badge ${a.score >= 80 ? 'badge-success' : a.score >= 60 ? 'badge-warning' : 'badge-error'}">${a.score}分</span>
                 <span>${a.filename || '未知文档'}</span>
+                <span class="text-xs text-secondary">点击查看详情</span>
               </span>
               <span class="text-xs text-secondary">${(a.completed_at || '').slice(0, 16)}</span>
             </div>
+            <div class="expander-content" id="hist-${a.id}" style="display:none"></div>
           </div>
         `).join('')}
       `;
+      // 绑定点击展开
+      el.querySelectorAll('.expander-header').forEach(h => {
+        h.addEventListener('click', () => loadHistoryDetail(h.closest('.expander').dataset.id));
+      });
     }
   } catch (e) { /* ignore */ }
+}
+
+async function loadHistoryDetail(assessmentId) {
+  const target = document.getElementById(`hist-${assessmentId}`);
+  if (!target) return;
+  if (target.style.display !== 'none' && target.innerHTML) {
+    target.style.display = 'none';
+    return;
+  }
+  target.style.display = 'block';
+  target.innerHTML = '<p class="text-secondary text-sm"><span class="spinner"></span> 加载中...</p>';
+  try {
+    const data = await api.get(`/assessments/${assessmentId}`);
+    const results = (data.results && data.results.length) ? data.results : (data.questions || []);
+    if (!results.length) {
+      target.innerHTML = '<p class="text-secondary text-sm">无详细数据</p>';
+      return;
+    }
+    target.innerHTML = results.map((r, i) => {
+      const correct = r.is_correct;
+      const icon = correct ? '✓' : '✗';
+      const color = correct ? 'var(--success)' : 'var(--error)';
+      return `
+        <div class="quiz-feedback-item" style="border-left-color:${color}; margin-top:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <span class="feedback-icon" style="color:${color}">${icon}</span>
+            <span class="badge ${correct ? 'badge-success' : 'badge-error'}">${r.score === 1 ? '满分' : r.score > 0 ? Math.round((r.score||0)*100)+'%' : '0分'}</span>
+          </div>
+          <div class="q-text" style="font-size:0.9rem;margin-top:6px">${i+1}. ${escapeHtml(r.question || r.question_text || '')}</div>
+          ${r.user_answer ? `<p class="text-sm mt-1" style="color:var(--ink-muted)">你的答案：${escapeHtml(r.user_answer)}</p>` : ''}
+          ${!correct && (r.correct_answer || r.answer) ? `<p class="text-sm mt-1" style="color:var(--success);font-weight:600">正确答案：${escapeHtml(r.correct_answer || r.answer)}</p>` : ''}
+          ${r.feedback ? `<p class="text-sm mt-1" style="color:var(--ink-muted);line-height:1.6">${escapeHtml(r.feedback)}</p>` : ''}
+          ${r.knowledge_point ? `<span class="badge badge-info mt-1">${escapeHtml(r.knowledge_point)}</span>` : ''}
+        </div>`;
+    }).join('');
+  } catch (e) {
+    target.innerHTML = `<p class="text-error text-sm">加载失败: ${e.message}</p>`;
+  }
 }

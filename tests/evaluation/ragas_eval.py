@@ -64,7 +64,7 @@ class RAGPipeline:
             print("[RAG] VectorStore 初始化完成")
 
         if self.llm_service is None:
-            from backend.services.claude_service import LLMService
+            from backend.services.llm_service import LLMService
             self.llm_service = LLMService()
             print("[RAG] LLMService 初始化完成")
 
@@ -163,7 +163,7 @@ class RAGASMetrics:
     def _ensure_llm(self):
         """确保 LLM 服务可用"""
         if self.llm is None:
-            from backend.services.claude_service import LLMService
+            from backend.services.llm_service import LLMService
             self.llm = LLMService()
 
     # ── Faithfulness（忠实度） ──

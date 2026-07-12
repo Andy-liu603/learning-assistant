@@ -4,7 +4,7 @@ API 路由 - 测评模块
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from flask import Blueprint, request, jsonify, g
-from services.claude_service import LLMService
+from services.llm_service import LLMService
 from models.database import (
     AssessmentDAO, KnowledgeDAO, ProgressDAO, DocumentDAO, StudySessionDAO, get_db
 )

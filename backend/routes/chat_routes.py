@@ -3,7 +3,7 @@ API 路由 - 对话问答（含 SSE 流式输出）
 """
 import json
 from flask import Blueprint, request, jsonify, Response, stream_with_context, g
-from services.claude_service import LLMService
+from services.llm_service import LLMService
 from services.document_service import DocumentService
 from models.database import (
     ConversationDAO, ProgressDAO, KnowledgeDAO, StudySessionDAO

@@ -254,16 +254,24 @@
   margin-bottom: 20px;
 }
 .doc-detail-meta {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 14px; margin-bottom: 24px;
-  padding: 20px; background: var(--ivory);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px 24px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--ivory);
   border-left: 3px solid var(--rust);
+  border-radius: 4px;
 }
-.doc-detail-meta dt {
-  font-size: 0.6rem; color: var(--ink-muted);
-  letter-spacing: 0.1em; font-weight: 700; text-transform: uppercase;
+.doc-detail-meta .meta-item {
+  display: flex; flex-direction: column; gap: 4px;
 }
-.doc-detail-meta dd { font-size: 0.9rem; color: var(--ink); font-weight: 500; margin-top: 2px; }
+.doc-detail-meta .meta-label {
+  font-size: 0.65rem; color: var(--ink-muted);
+  letter-spacing: 0.1em; font-weight: 600; text-transform: uppercase;
+}
+.doc-detail-meta .meta-value { font-size: 0.9rem; color: var(--ink); font-weight: 500; }
+.doc-detail-meta dt, .doc-detail-meta dd { display: none; }
 
 .doc-chunks-list {
   max-height: 400px; overflow-y: auto;

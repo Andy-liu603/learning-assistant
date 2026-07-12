@@ -19,7 +19,7 @@ def load_questions():
 
 def call_llm(prompt):
     """直接调用 LLM"""
-    from services.claude_service import LLMService
+    from services.llm_service import LLMService
     llm = LLMService()
     return llm._call(
         [{"role": "system", "content": "你是一个专业的评估专家。只输出 JSON，不要任何额外内容。"},
@@ -65,7 +65,7 @@ def generate_answer(question):
 问题：{question}
 
 请直接给出你的回答。"""
-    from services.claude_service import LLMService
+    from services.llm_service import LLMService
     llm = LLMService()
     return llm._call(
         [{"role": "system", "content": "你是一个全科全能个人学习助手。请准确、结构化地回答用户问题。"},

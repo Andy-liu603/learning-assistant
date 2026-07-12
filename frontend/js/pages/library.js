@@ -122,7 +122,21 @@ async function loadDocuments() {
         const id = parseInt(btn.dataset.id);
         if (action === 'delete') {
           const ok = await showConfirm('删除后所有关联的对话、测评、学习记录将被永久移除。确定删除？');
-          if (ok) { await api.delete(`/documents/${id}`); showToast('已删除'); loadDocuments(); }
+          if (!ok) return;
+          // 乐观移除 DOM 节点
+          const docItem = btn.closest('.doc-item');
+          if (docItem) docItem.style.opacity = '0.3';
+          try {
+            await api.delete(`/documents/${id}`);
+            showToast('已删除', 'success');
+            // 关闭详情面板（防止显示已删除文档的详情）
+            const detail = document.getElementById('docDetail');
+            if (detail) detail.classList.add('hidden');
+            await loadDocuments();
+          } catch (e) {
+            if (docItem) docItem.style.opacity = '1';
+            showToast('删除失败: ' + e.message, 'error');
+          }
         } else if (action === 'reparse') {
           await api.post(`/documents/${id}/reparse`);
           showToast('重新解析已启动', 'info');
@@ -141,28 +155,36 @@ async function loadDocuments() {
 }
 
 async function pollDocProgress(docId) {
-  const maxPolls = 120;
+  // 同一文档只允许一个轮询
+  if (window._docPolls && window._docPolls[docId]) return;
+  window._docPolls = window._docPolls || {};
+  const maxPolls = 30;  // 30 次 * 1.5s = 45s 后强制停止
   let polls = 0;
   const interval = setInterval(async () => {
     polls++;
     try {
       const progress = await api.get(`/documents/${docId}/progress`);
+      // 文档可能已被删除
+      if (progress.error || progress.status === 'not_found') {
+        clearInterval(interval);
+        delete window._docPolls[docId];
+        return;
+      }
       const bar = document.querySelector(`.doc-progress-bar[data-doc-id="${docId}"]`);
       const label = bar?.nextElementSibling;
-      if (bar) {
-        bar.querySelector('.doc-progress-fill').style.width = `${progress.progress_pct}%`;
-      }
-      if (label) {
-        label.textContent = progress.stage_label || '解析中...';
-      }
+      if (bar) bar.querySelector('.doc-progress-fill').style.width = `${progress.progress_pct || 0}%`;
+      if (label) label.textContent = progress.stage_label || '解析中...';
       if (progress.status === 'parsed' || progress.status === 'error' || polls >= maxPolls) {
         clearInterval(interval);
+        delete window._docPolls[docId];
         if (progress.status === 'parsed') loadDocuments();
       }
     } catch (e) {
       clearInterval(interval);
+      delete window._docPolls[docId];
     }
   }, 1500);
+  window._docPolls[docId] = interval;
 }
 
 async function viewDocument(docId) {
@@ -185,14 +207,14 @@ async function viewDocument(docId) {
           <h3>${escapeHtml(d.filename)}</h3>
           <button class="btn btn-sm btn-ghost" onclick="document.getElementById('docDetail').classList.add('hidden')">关闭</button>
         </div>
-        <dl class="doc-detail-meta">
-          <dt>状态</dt><dd>${getStatusBadge(d.status)}</dd>
-          <dt>大小</dt><dd>${(d.file_size / 1024).toFixed(0)} KB</dd>
-          <dt>分块数</dt><dd>${d.chunk_count || 0}</dd>
-          <dt>学习进度</dt><dd>${getProgressLabel(d.progress_status || 'not_started')}</dd>
-          <dt>上传时间</dt><dd>${formatDate(d.created_at)}</dd>
-          ${d.page_count ? `<dt>页数</dt><dd>${d.page_count}</dd>` : ''}
-        </dl>
+        <div class="doc-detail-meta">
+          <div class="meta-item"><span class="meta-label">状态</span><span class="meta-value">${getStatusBadge(d.status)}</span></div>
+          <div class="meta-item"><span class="meta-label">大小</span><span class="meta-value">${(d.file_size / 1024).toFixed(0)} KB</span></div>
+          <div class="meta-item"><span class="meta-label">分块数</span><span class="meta-value">${d.chunk_count || 0}</span></div>
+          <div class="meta-item"><span class="meta-label">学习进度</span><span class="meta-value">${getProgressLabel(d.progress_status || 'not_started')}</span></div>
+          <div class="meta-item"><span class="meta-label">上传时间</span><span class="meta-value">${formatDate(d.created_at)}</span></div>
+          ${d.page_count ? `<div class="meta-item"><span class="meta-label">页数</span><span class="meta-value">${d.page_count}</span></div>` : ''}
+        </div>
         ${data.chunks && data.chunks.length ? `
           <div class="doc-chunks-list">
             <p class="text-xs text-secondary mb-2">内容片段（${data.chunks.length}）</p>

@@ -10,7 +10,7 @@ from models.database import (
     ProgressDAO, KnowledgeDAO, StudySessionDAO,
     ReportDAO, DocumentDAO, ConversationDAO
 )
-from services.claude_service import ClaudeService
+from services.llm_service import ClaudeService
 
 
 class ReportService:

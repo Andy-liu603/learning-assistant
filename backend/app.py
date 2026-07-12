@@ -138,7 +138,7 @@ def create_app():
     @app.route("/api/models", methods=["GET"])
     @require_auth
     def list_models():
-        from services.claude_service import LLMService, get_current_model
+        from services.llm_service import LLMService, get_current_model
         llm = LLMService()
         models = llm.get_available_models()
         return jsonify({"models": models, "current": get_current_model()})
@@ -148,7 +148,7 @@ def create_app():
     def switch_model():
         data = request.get_json(silent=True) or {}
         model_id = data.get("model", "")
-        from services.claude_service import LLMService, set_global_model
+        from services.llm_service import LLMService, set_global_model
         llm = LLMService()
         if llm.set_model(model_id):
             return jsonify({"status": "switched", "model": model_id})

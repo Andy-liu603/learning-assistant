@@ -2,7 +2,7 @@
 
 > **从 0 到 1 设计并交付的 AI 原生产品** — 面向知识工作者的 RAG 增强全科学习系统
 
-[![Version](https://img.shields.io/badge/version-2.4-rust)](.) [![Test](https://img.shields.io/badge/tests-28%20passed-success)](.) [![Security](https://img.shields.io/badge/security-audited-success)](docs/安全检查报告.md)
+[![Version](https://img.shields.io/badge/version-2.4-rust)](.) [![Test](https://img.shields.io/badge/tests-28%20passed-success)](.) [![Security](https://img.shields.io/badge/security-audited-success)](docs/08-安全检查报告.md)
 
 ## 为什么这个项目展示 AI PM 能力
 
@@ -10,13 +10,13 @@
 
 | 产品思维 | 本项目对应产出 | 链接 |
 |---------|--------------|------|
-| 用户洞察 | 3 个用户画像 + JTBD 分析 | [PRD.md](docs/PRD.md) |
-| 竞品分析 | 6 维度竞品对比（Notion AI/Anki/Readwise） | [PRD.md](docs/PRD.md) |
-| 需求优先级 | P0/P1/P2 功能矩阵，v1.0→v2.4 分阶段交付 | [PRD.md](docs/PRD.md) |
-| 技术决策 | "为什么用 Vanilla JS 而不是 React"的产品逻辑 | [前端选型](docs/前端技术选型说明.md) |
+| 用户洞察 | 3 个用户画像 + JTBD 分析 | [01-PRD产品需求文档.md](docs/01-PRD产品需求文档.md) |
+| 竞品分析 | 6 维度竞品对比（Notion AI/Anki/Readwise） | [01-PRD产品需求文档.md](docs/01-PRD产品需求文档.md) |
+| 需求优先级 | P0/P1/P2 功能矩阵，v1.0→v2.4 分阶段交付 | [01-PRD产品需求文档.md](docs/01-PRD产品需求文档.md) |
+| 技术决策 | "为什么用 Vanilla JS 而不是 React"的产品逻辑 | [07-前端技术选型说明.md](docs/07-前端技术选型说明.md) |
 | 量化评估 | RAGAS 回答质量 7.5/10 + 自实验设计 | [评估结果](tests/evaluation/eval_results.json) |
-| 安全合规 | XSS/SQL注入/CSRF 五维安全审计 | [安全报告](docs/安全检查报告.md) |
-| 用户体验 | 5 条操作路径可用性测试（评分 4.3/5） | [UX报告](docs/UX测试报告.md) |
+| 安全合规 | XSS/SQL注入/CSRF 五维安全审计 | [08-安全检查报告.md](docs/08-安全检查报告.md) |
+| 用户体验 | 5 条操作路径可用性测试（评分 4.3/5） | [09-UX用户体验报告.md](docs/09-UX用户体验报告.md) |
 
 **我不是只会写代码——我是从"用户为什么需要这个"开始，到"怎么验证做对了"结束的完整产品闭环。**
 
@@ -70,15 +70,15 @@ python backend/app.py
 
 | 文档 | 类型 | 说明 |
 |------|------|------|
-| [PRD.md](docs/PRD.md) | 产品 | 完整产品需求文档（用户画像+竞品+功能矩阵+路线图） |
-| [系统架构文档.md](docs/系统架构文档.md) | 技术 | Mermaid 四层架构图 + ER 图 + 安全设计 |
-| [核心模块文档.md](docs/核心模块文档.md) | 技术 | 9 个模块 API+数据流+设计决策 |
-| [后端技术选型说明.md](docs/后端技术选型说明.md) | PM+技术 | 每个技术决策的"为什么" |
-| [前端技术选型说明.md](docs/前端技术选型说明.md) | PM+技术 | Vanilla JS 选择的产品思维论证 |
-| [用户验证方案.md](docs/用户验证方案.md) | 产品 | 3 个用户画像 + 使用路径 + 验证方式 |
-| [自实验设计.md](docs/自实验设计.md) | 产品 | RAG vs 传统阅读对照实验 |
-| [安全检查报告.md](docs/安全检查报告.md) | 质量 | XSS/SQL注入/CSRF 审计 |
-| [UX测试报告.md](docs/UX测试报告.md) | 质量 | 可用性评分 4.3/5 + 性能基准 |
+| [01-PRD产品需求文档.md](docs/01-PRD产品需求文档.md) | 产品 | 完整产品需求文档（用户画像+竞品+功能矩阵+路线图） |
+| [04-系统架构文档.md](docs/04-系统架构文档.md) | 技术 | Mermaid 四层架构图 + ER 图 + 安全设计 |
+| [05-核心模块文档.md](docs/05-核心模块文档.md) | 技术 | 9 个模块 API+数据流+设计决策 |
+| [06-后端技术选型说明.md](docs/06-后端技术选型说明.md) | PM+技术 | 每个技术决策的"为什么" |
+| [07-前端技术选型说明.md](docs/07-前端技术选型说明.md) | PM+技术 | Vanilla JS 选择的产品思维论证 |
+| [02-用户画像与验证方案.md](docs/02-用户画像与验证方案.md) | 产品 | 3 个用户画像 + 使用路径 + 验证方式 |
+| [03-RAG自实验设计.md](docs/03-RAG自实验设计.md) | 产品 | RAG vs 传统阅读对照实验 |
+| [08-安全检查报告.md](docs/08-安全检查报告.md) | 质量 | XSS/SQL注入/CSRF 审计 |
+| [09-UX用户体验报告.md](docs/09-UX用户体验报告.md) | 质量 | 可用性评分 4.3/5 + 性能基准 |
 
 ## 技术栈
 

@@ -40,7 +40,7 @@ def generate_plan():
     daily_hours = int(data.get("daily_hours", 1))
 
     try:
-        from services.claude_service import LLMService
+        from services.llm_service import LLMService
         llm = LLMService()
         prompt = f"""请为以下学习需求生成一个 {duration_days} 天的结构化学习计划。
 

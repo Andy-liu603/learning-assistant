@@ -44,8 +44,8 @@ export async function renderSettingsPage() {
             `<option value="${m.id}" ${m.is_current ? 'selected' : ''}>${m.name} · ${m.type === 'multimodal' ? '全模态' : '文本'}</option>`
           ).join('') : '<option>DeepSeek V4 Flash</option>'}
         </select>
+        <p class="text-xs text-secondary mt-2">选择不同模型即即时切换，无需点击按钮</p>
       </div>
-      <button id="switchModelBtn" class="btn btn-primary btn-sm">切换模型</button>
     </div>
 
     <div class="settings-section">
@@ -68,9 +68,9 @@ export async function renderSettingsPage() {
     </div>
   `;
 
-  // 模型切换
-  document.getElementById('switchModelBtn').addEventListener('click', async () => {
-    const model = document.getElementById('modelSelect').value;
+  // 模型切换：下拉框 change 即切换
+  document.getElementById('modelSelect').addEventListener('change', async (e) => {
+    const model = e.target.value;
     try {
       const res = await api.post('/models/switch', { model });
       if (res.status === 'switched') {

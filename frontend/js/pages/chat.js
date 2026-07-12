@@ -35,8 +35,10 @@ export async function renderChatPage() {
             </select>
           </div>
           <div class="context-item">
-            <label>模型</label>
-            <span id="modelDisplay" class="context-value">加载中...</span>
+            <label for="modelSelect">模型</label>
+            <select id="modelSelect">
+              <option value="">加载中...</option>
+            </select>
           </div>
         </div>
         <div id="chatHistory" class="chat-history">
@@ -57,7 +59,7 @@ export async function renderChatPage() {
 
   loadConversationList();
   loadDocOptions();
-  loadModelDisplay();
+  loadModelSelect();
 
   document.getElementById('newChatBtn').addEventListener('click', startNewChat);
 
@@ -92,7 +94,10 @@ export async function renderChatPage() {
       `/conversations/${convId}/messages`,
       { message, document_id: docId ? parseInt(docId) : null, stream: true },
       chunk => {
-        textEl.innerHTML = renderMarkdown(textEl.textContent + chunk);
+        // 流式累加后整体渲染 markdown
+        const raw = textEl.dataset.raw || '';
+        textEl.dataset.raw = raw + chunk;
+        textEl.innerHTML = renderMarkdown(textEl.dataset.raw);
         chatHistory.scrollTop = chatHistory.scrollHeight;
       },
       data => {
@@ -100,14 +105,51 @@ export async function renderChatPage() {
         if (data.sources && data.sources.length) {
           const srcDiv = document.createElement('div');
           srcDiv.className = 'chat-sources';
-          srcDiv.textContent = `引用 ${data.sources.length} 个资料片段`;
+          // 提取每条引用的文档 ID + 片段索引（支持跳转）
+          const items = data.sources.map((s, i) => {
+            const docId = s.document_id || s.doc_id || (s.metadata && s.metadata.document_id) || '';
+            const chunkIdx = s.chunk_index != null ? s.chunk_index : (s.metadata && s.metadata.chunk_index != null ? s.metadata.chunk_index : i);
+            const filename = (s.filename || (s.metadata && s.metadata.filename) || '资料片段').replace(/[<>]/g, '');
+            const preview = (s.content || s.text || '').replace(/[<>]/g, '').slice(0, 60);
+            const href = docId
+              ? `javascript:void(0)`
+              : `javascript:void(0)`;
+            return `<a href="${href}" class="chat-source-item" data-doc-id="${docId}" data-chunk="${chunkIdx}" data-filename="${filename}" title="${filename}：${preview}...">
+              <span class="source-num">${i + 1}</span>
+              <span class="source-name">${filename}</span>
+              <span class="source-preview">${preview}…</span>
+            </a>`;
+          }).join('');
+          srcDiv.innerHTML = `
+            <div class="chat-sources-title">📎 引用 ${data.sources.length} 个资料片段（点击查看）</div>
+            <div class="chat-sources-list">${items}</div>
+          `;
           aiMsg.appendChild(srcDiv);
+          // 绑定点击跳转
+          srcDiv.querySelectorAll('.chat-source-item').forEach(a => {
+            a.addEventListener('click', () => {
+              const docId = a.dataset.docId;
+              const filename = a.dataset.filename;
+              if (docId) {
+                window.location.hash = '#/library';
+                setTimeout(() => {
+                  if (typeof window.viewDocumentById === 'function') {
+                    window.viewDocumentById(parseInt(docId));
+                  } else {
+                    showToast(`已跳转到资料库（${filename}）`, 'info');
+                  }
+                }, 300);
+              }
+            });
+          });
         }
         loadConversationList();
       },
       err => {
         aiMsg.querySelector('.typing-dots')?.remove();
-        textEl.textContent += `\n[错误: ${err.message}]`;
+        const raw = textEl.dataset.raw || '';
+        textEl.dataset.raw = raw + '\n[错误: ' + err.message + ']';
+        textEl.innerHTML = renderMarkdown(textEl.dataset.raw);
       }
     );
   }
@@ -152,10 +194,24 @@ export async function renderChatPage() {
           e.stopPropagation();
           const id = parseInt(btn.dataset.id);
           if (!confirm('确定删除这条对话？')) return;
-          await api.delete(`/conversations/${id}`);
-          if (convId === id) startNewChat();
-          loadConversationList();
-          showToast('对话已删除');
+          // 乐观更新：先从 DOM 移除并结束
+          const item = btn.closest('.conv-item');
+          if (item) item.style.display = 'none';
+          if (convId === id) {
+            // 当前打开的对话被删除，关闭它
+            convId = null;
+            isFirstMsg = true;
+            chatHistory.innerHTML = showEmpty('', '对话已删除，开始新的对话吧');
+          }
+          try {
+            await api.delete(`/conversations/${id}`);
+            showToast('对话已删除', 'success');
+          } catch (err) {
+            // 失败时恢复显示
+            if (item) item.style.display = '';
+            showToast('删除失败: ' + err.message, 'error');
+          }
+          await loadConversationList();
         });
       });
     } catch (e) {
@@ -193,9 +249,10 @@ function addMessageDOM(role, content, isStreaming = false) {
   const cls = role === 'user' ? 'chat-user' : 'chat-assistant';
   const div = createEl('div', { className: `chat-message ${cls}` });
   if (isStreaming) {
-    div.innerHTML = '<span class="msg-text" style="white-space:pre-wrap"></span><div class="typing-dots"><span></span><span></span><span></span></div>';
+    div.innerHTML = '<div class="msg-text markdown-body"></div><div class="typing-dots"><span></span><span></span><span></span></div>';
+    div.querySelector('.msg-text').textContent = '';
   } else {
-    div.innerHTML = `<span class="msg-text" style="white-space:pre-wrap">${escapeHtml(content)}</span>`;
+    div.innerHTML = `<div class="msg-text markdown-body">${renderMarkdown(content)}</div>`;
   }
   chatHistory.appendChild(div);
   chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -218,13 +275,31 @@ async function loadDocOptions() {
   } catch (e) { /* ignore */ }
 }
 
-async function loadModelDisplay() {
+async function loadModelSelect() {
   try {
     const data = await api.get('/models');
-    const el = document.getElementById('modelDisplay');
-    if (data && data.current && el) el.textContent = data.current;
+    const sel = document.getElementById('modelSelect');
+    if (!sel) return;
+    if (data && data.models && data.models.length) {
+      sel.innerHTML = data.models.map(m =>
+        `<option value="${m.id}" ${m.is_current ? 'selected' : ''}>${m.name}${m.type === 'multimodal' ? ' · 多模态' : ''}</option>`
+      ).join('');
+      sel.addEventListener('change', async (e) => {
+        const model = e.target.value;
+        try {
+          const r = await api.post('/models/switch', { model });
+          if (r.status === 'switched') {
+            showToast(`已切换至 ${model}`, 'success');
+          }
+        } catch (err) {
+          showToast('切换失败: ' + err.message, 'error');
+        }
+      });
+    } else {
+      sel.innerHTML = '<option>DeepSeek V4 Flash</option>';
+    }
   } catch (e) {
-    const el = document.getElementById('modelDisplay');
-    if (el) el.textContent = 'DeepSeek Chat';
+    const sel = document.getElementById('modelSelect');
+    if (sel) sel.innerHTML = '<option>DeepSeek V4 Flash</option>';
   }
 }

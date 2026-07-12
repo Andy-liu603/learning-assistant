@@ -174,7 +174,7 @@ class DocumentService:
                 # 尝试调用多模态视觉模型
                 parse_error = None
                 try:
-                    from services.claude_service import LLMService
+                    from services.llm_service import LLMService
                     llm = LLMService()
                     result = llm.chat_with_image(
                         image_base64=img_data,
