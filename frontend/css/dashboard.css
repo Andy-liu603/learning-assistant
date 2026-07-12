@@ -212,4 +212,56 @@
 @media (max-width: 600px) {
   .metrics-row { grid-template-columns: 1fr; }
   .dashboard-quick-stats { flex-wrap: wrap; }
+  .dashboard-row { grid-template-columns: 1fr; }
+}
+
+/* v2.4.2 — 双列布局 */
+.dashboard-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.empty-mini {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.88rem;
+  background: var(--ivory);
+  border-radius: 4px;
+}
+.weak-list, .recent-list { list-style: none; padding: 0; margin: 0; }
+.weak-list li, .recent-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--border);
+  font-size: 0.86rem;
+}
+.weak-list li:last-child, .recent-list li:last-child { border-bottom: none; }
+.weak-name { color: var(--ink); font-weight: 500; }
+.weak-level {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  background: rgba(212, 101, 42, 0.12);
+  color: var(--rust);
+  border-radius: 10px;
+  font-weight: 600;
+}
+.weak-source {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recent-name { color: var(--ink); font-weight: 500; }
+.recent-meta { font-size: 0.75rem; color: var(--ink-muted); }
+.chart-card-weak { border-top: 3px solid var(--rust); }
+.chart-card-recent { border-top: 3px solid #4A6B53; }
+@media (max-width: 900px) {
+  .dashboard-row { grid-template-columns: 1fr; }
 }

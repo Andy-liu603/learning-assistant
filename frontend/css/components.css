@@ -462,3 +462,25 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* v2.4.2 — 行内引用样式 [1][2][3] */
+.cite-ref {
+  display: inline-block;
+  margin-left: 2px;
+  padding: 0 4px;
+  background: rgba(212, 101, 42, 0.1);
+  color: var(--rust);
+  font-size: 0.7em;
+  font-weight: 600;
+  border-radius: 3px;
+  cursor: pointer;
+  vertical-align: super;
+  line-height: 1.4;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.cite-ref:hover {
+  background: var(--rust);
+  color: #fff;
+  transform: scale(1.1);
+}
+.msg-cites { display: inline; white-space: nowrap; margin-left: 4px; }

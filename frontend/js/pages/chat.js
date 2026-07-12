@@ -103,45 +103,35 @@ export async function renderChatPage() {
       data => {
         aiMsg.querySelector('.typing-dots')?.remove();
         if (data.sources && data.sources.length) {
-          const srcDiv = document.createElement('div');
-          srcDiv.className = 'chat-sources';
-          // 提取每条引用的文档 ID + 片段索引（支持跳转）
-          const items = data.sources.map((s, i) => {
+          // 行内引用：把 [1][2][3] 插入文本末尾，并绑定点击
+          const inlineSup = data.sources.map((s, i) => {
             const docId = s.document_id || s.doc_id || (s.metadata && s.metadata.document_id) || '';
-            const chunkIdx = s.chunk_index != null ? s.chunk_index : (s.metadata && s.metadata.chunk_index != null ? s.metadata.chunk_index : i);
             const filename = (s.filename || (s.metadata && s.metadata.filename) || '资料片段').replace(/[<>]/g, '');
-            const preview = (s.content || s.text || '').replace(/[<>]/g, '').slice(0, 60);
-            const href = docId
-              ? `javascript:void(0)`
-              : `javascript:void(0)`;
-            return `<a href="${href}" class="chat-source-item" data-doc-id="${docId}" data-chunk="${chunkIdx}" data-filename="${filename}" title="${filename}：${preview}...">
-              <span class="source-num">${i + 1}</span>
-              <span class="source-name">${filename}</span>
-              <span class="source-preview">${preview}…</span>
-            </a>`;
+            return `<sup class="cite-ref" data-doc-id="${docId}" data-idx="${i}" data-filename="${escapeHtml(filename)}" title="查看引用：${escapeHtml(filename)}">[${i + 1}]</sup>`;
           }).join('');
-          srcDiv.innerHTML = `
-            <div class="chat-sources-title">📎 引用 ${data.sources.length} 个资料片段（点击查看）</div>
-            <div class="chat-sources-list">${items}</div>
-          `;
-          aiMsg.appendChild(srcDiv);
-          // 绑定点击跳转
-          srcDiv.querySelectorAll('.chat-source-item').forEach(a => {
-            a.addEventListener('click', () => {
-              const docId = a.dataset.docId;
-              const filename = a.dataset.filename;
-              if (docId) {
-                window.location.hash = '#/library';
-                setTimeout(() => {
-                  if (typeof window.viewDocumentById === 'function') {
-                    window.viewDocumentById(parseInt(docId));
-                  } else {
-                    showToast(`已跳转到资料库（${filename}）`, 'info');
-                  }
-                }, 300);
-              }
+          if (inlineSup) {
+            const tail = document.createElement('span');
+            tail.className = 'msg-cites';
+            tail.innerHTML = inlineSup;
+            textEl.appendChild(tail);
+            // 绑定点击跳转
+            tail.querySelectorAll('.cite-ref').forEach(ref => {
+              ref.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const docId = ref.dataset.docId;
+                if (docId) {
+                  window.location.hash = '#/library';
+                  setTimeout(() => {
+                    if (typeof window.viewDocumentById === 'function') {
+                      window.viewDocumentById(parseInt(docId));
+                    }
+                  }, 300);
+                } else {
+                  showToast('未关联具体文档', 'info');
+                }
+              });
             });
-          });
+          }
         }
         loadConversationList();
       },
