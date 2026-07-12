@@ -65,7 +65,9 @@ def send_message(conv_id):
     context_chunks = []
     if document_id:
         search_results = DocumentService.search_documents(user_message, document_id, top_k=5, user_id=g.user_id)
-        context_chunks = [chunk for chunk, score in search_results if score > 0.3]
+        # search_results: [(text, score, meta), ...]
+        # 保留 3 元组供 _build_inline_sources 使用
+        context_chunks = [(chunk, score, meta) for chunk, score, meta in search_results if score > 0.3]
 
     if use_stream:
         return _stream_response(conv_id, user_message, document_id, context_chunks)
@@ -98,7 +100,10 @@ def _stream_response(conv_id, user_message, document_id, context_chunks):
                 full_reply += chunk
                 yield f"data: {json.dumps({'chunk': chunk}, ensure_ascii=False)}\n\n"
 
-            yield f"data: {json.dumps({'done': True, 'sources': context_chunks}, ensure_ascii=False)}\n\n"
+            # 在流结束后处理引用：把 context_chunks 中携带的 document_id 暴露
+            # 同时按段落（换行符）切分回复，把每段对应到检索片段
+            sources = _build_inline_sources(full_reply, context_chunks, document_id)
+            yield f"data: {json.dumps({'done': True, 'sources': sources}, ensure_ascii=False)}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)}, ensure_ascii=False)}\n\n"
 
@@ -117,6 +122,50 @@ def _stream_response(conv_id, user_message, document_id, context_chunks):
             "X-Accel-Buffering": "no"
         }
     )
+
+
+def _build_inline_sources(full_reply: str, context_chunks: list, doc_id: int = None) -> list:
+    """
+    为每条 context 构建 sources 列表
+    context_chunks 元素可能是:
+      - (text, score) — 旧格式
+      - (text, score, meta) — 新格式
+    """
+    sources = []
+    for i, item in enumerate(context_chunks):
+        if isinstance(item, dict):
+            text = item.get('content', item.get('text', ''))
+            score = item.get('score', 0)
+            meta = item.get('metadata', {}) or {}
+        elif isinstance(item, (list, tuple)):
+            text = item[0] if len(item) > 0 else ''
+            score = item[1] if len(item) > 1 else 0
+            meta = item[2] if len(item) > 2 else {}
+        else:
+            continue
+
+        meta = meta or {}
+        src_doc_id = meta.get('document_id') or meta.get('doc_id') or doc_id
+        filename = meta.get('filename', '')
+        # 如果 metadata 没有 filename 但有 doc_id，查 DB
+        if not filename and src_doc_id:
+            try:
+                from models.database import DocumentDAO
+                doc = DocumentDAO.get_by_id(src_doc_id)
+                if doc:
+                    filename = doc.get('filename', '')
+            except Exception:
+                pass
+
+        sources.append({
+            'idx': i,
+            'document_id': src_doc_id,
+            'filename': filename,
+            'content': (text or '')[:80],
+            'fingerprint': (text or '')[:30],
+            'score': score
+        })
+    return sources
 
 
 @chat_bp.route("/api/conversations/<int:conv_id>/title", methods=["PUT"])

@@ -6,6 +6,29 @@ from openai import OpenAI
 import json
 import time
 import config
+
+
+def _extract_texts(context_chunks) -> list:
+    """
+    统一从多种 context_chunks 格式中提取纯文本
+    支持: (text, score), (text, score, meta), dict with 'content'/'text' key
+    """
+    if not context_chunks:
+        return []
+    texts = []
+    for item in context_chunks:
+        if isinstance(item, str):
+            texts.append(item)
+        elif isinstance(item, dict):
+            texts.append(item.get('content') or item.get('text', ''))
+        elif isinstance(item, (list, tuple)):
+            if len(item) > 0 and isinstance(item[0], str):
+                texts.append(item[0])
+            else:
+                texts.append(str(item))
+        else:
+            texts.append(str(item))
+    return texts
 from models.database import ConversationDAO
 
 # 全局模型状态（跨实例共享）
@@ -201,10 +224,12 @@ class LLMService:
         messages = ConversationDAO.get_messages(conversation_id)
         message_list = [{"role": m["role"], "content": m["content"]} for m in messages]
 
+        # context_chunks 可能是 (text, score) 或 (text, score, meta) — 统一取出 text
+        chunk_texts = _extract_texts(context_chunks)
         enhanced_content = user_message
-        if context_chunks:
+        if chunk_texts:
             context_text = "\n\n---\n\n".join([
-                f"[资料片段 {i+1}]\n{chunk}" for i, chunk in enumerate(context_chunks)
+                f"[资料片段 {i+1}]\n{t}" for i, t in enumerate(chunk_texts)
             ])
             enhanced_content = (
                 f"以下是与用户问题相关的学习资料片段，请优先基于这些内容回答：\n\n"
@@ -239,10 +264,11 @@ class LLMService:
         messages = ConversationDAO.get_messages(conversation_id)
         message_list = [{"role": m["role"], "content": m["content"]} for m in messages]
 
+        chunk_texts = _extract_texts(context_chunks)
         enhanced_content = user_message
-        if context_chunks:
+        if chunk_texts:
             context_text = "\n\n---\n\n".join([
-                f"[资料片段 {i+1}]\n{chunk}" for i, chunk in enumerate(context_chunks)
+                f"[资料片段 {i+1}]\n{t}" for i, t in enumerate(chunk_texts)
             ])
             enhanced_content = (
                 f"以下是与用户问题相关的学习资料片段，请优先基于这些内容回答：\n\n"

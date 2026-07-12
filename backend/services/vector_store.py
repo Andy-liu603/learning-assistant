@@ -90,9 +90,10 @@ class VectorStore:
 
         return ids
 
-    def search(self, query: str, doc_id: int = None, top_k: int = 5, user_id: int = None) -> List[Tuple[str, float]]:
+    def search(self, query: str, doc_id: int = None, top_k: int = 5, user_id: int = None) -> List[Tuple[str, float, dict]]:
         """
         语义搜索最相关的文本片段
+        返回: [(content, score, metadata), ...]
         """
         embedding_fn = self._get_embedding_function()
         query_embedding = embedding_fn([query]).tolist()
@@ -125,25 +126,32 @@ class VectorStore:
 
         documents = results["documents"][0]
         distances = results.get("distances", [[]])[0]
+        metadatas = results.get("metadatas", [[]])[0] if results.get("metadatas") else [{}] * len(documents)
 
-        return [(doc, 1.0 - dist) for doc, dist in zip(documents, distances)]
+        return [
+            (doc, 1.0 - dist, meta or {})
+            for doc, dist, meta in zip(documents, distances, metadatas)
+        ]
 
     def _merge_results(self, all_results: list, top_k: int) -> dict:
         """合并多个 collection 的搜索结果"""
         merged_docs = []
         merged_dists = []
+        merged_metas = []
         for result in all_results:
             if result.get("documents") and result["documents"][0]:
                 merged_docs.extend(result["documents"][0])
                 merged_dists.extend(result.get("distances", [[]])[0])
+                merged_metas.extend(result.get("metadatas", [[]])[0] if result.get("metadatas") else [{}] * len(result["documents"][0]))
 
         # 按距离排序，取 top_k
-        paired = sorted(zip(merged_docs, merged_dists), key=lambda x: x[1])
+        paired = sorted(zip(merged_docs, merged_dists, merged_metas), key=lambda x: x[1])
         paired = paired[:top_k]
 
         return {
             "documents": [[p[0] for p in paired]],
-            "distances": [[p[1] for p in paired]]
+            "distances": [[p[1] for p in paired]],
+            "metadatas": [[p[2] for p in paired]]
         }
 
     def delete_document(self, doc_id: int, user_id: int = None):

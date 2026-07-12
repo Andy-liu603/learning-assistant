@@ -103,35 +103,8 @@ export async function renderChatPage() {
       data => {
         aiMsg.querySelector('.typing-dots')?.remove();
         if (data.sources && data.sources.length) {
-          // 行内引用：把 [1][2][3] 插入文本末尾，并绑定点击
-          const inlineSup = data.sources.map((s, i) => {
-            const docId = s.document_id || s.doc_id || (s.metadata && s.metadata.document_id) || '';
-            const filename = (s.filename || (s.metadata && s.metadata.filename) || '资料片段').replace(/[<>]/g, '');
-            return `<sup class="cite-ref" data-doc-id="${docId}" data-idx="${i}" data-filename="${escapeHtml(filename)}" title="查看引用：${escapeHtml(filename)}">[${i + 1}]</sup>`;
-          }).join('');
-          if (inlineSup) {
-            const tail = document.createElement('span');
-            tail.className = 'msg-cites';
-            tail.innerHTML = inlineSup;
-            textEl.appendChild(tail);
-            // 绑定点击跳转
-            tail.querySelectorAll('.cite-ref').forEach(ref => {
-              ref.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const docId = ref.dataset.docId;
-                if (docId) {
-                  window.location.hash = '#/library';
-                  setTimeout(() => {
-                    if (typeof window.viewDocumentById === 'function') {
-                      window.viewDocumentById(parseInt(docId));
-                    }
-                  }, 300);
-                } else {
-                  showToast('未关联具体文档', 'info');
-                }
-              });
-            });
-          }
+          // 把引用 [1][2][3] 分散注入到回复中各段落的末尾（紧跟原文）
+          injectInlineCitations(textEl, data.sources);
         }
         loadConversationList();
       },
@@ -292,4 +265,104 @@ async function loadModelSelect() {
     const sel = document.getElementById('modelSelect');
     if (sel) sel.innerHTML = '<option>DeepSeek V4 Flash</option>';
   }
+}
+
+/**
+ * 把 [1][2][3] 引用分散插入到回复文本各段落的末尾
+ * 策略：对每条 source，从其 content 中提取 2-3 个关键词，
+ *       在回复文本中找第一个包含这些关键词的段落，段末插入 [n]
+ *       若未匹配到，则把该引用追加到回复末尾
+ */
+function injectInlineCitations(textEl, sources) {
+  if (!textEl || !sources || !sources.length) return;
+  // 拿到当前已渲染的 HTML（用 dataset.raw 备份）
+  const raw = textEl.dataset.raw || textEl.textContent || '';
+  if (!raw.trim()) return;
+
+  // 把回复按段落（\n\n 或 <br><br>）拆分
+  // 渲染后 \n 被转为 <br>，我们按 <br><br> 拆
+  let html = textEl.innerHTML;
+  // 把 br 拆为段落数组
+  const blocks = html.split(/(?:<br>\s*){2,}/i);
+  if (blocks.length <= 1) {
+    // 没有段落分隔，按句号切分
+    blocks.length = 0;
+    const tmp = html.split(/(?<=[。！？!?\.])/);
+    blocks.push(...tmp.filter(s => s.trim()));
+  }
+
+  // 对每条 source，尝试匹配一个段落
+  const usedBlocks = new Set();
+  const matchedSources = sources.map((s, i) => {
+    const content = (s.content || '').trim();
+    const fp = (s.fingerprint || content).slice(0, 30);
+    // 提取 2-3 个关键词（每个至少 2 字）
+    const keywords = [];
+    if (fp) {
+      // 按标点和空格切分
+      const tokens = fp.split(/[，。！？,.!?\s\n]/).filter(t => t.length >= 2);
+      keywords.push(...tokens.slice(0, 3));
+    }
+    // 找第一个含关键词的段落
+    for (let j = 0; j < blocks.length; j++) {
+      if (usedBlocks.has(j)) continue;
+      const blockText = blocks[j].replace(/<[^>]+>/g, '').replace(/\s+/g, '');
+      if (!blockText) continue;
+      const hasKeyword = keywords.length === 0
+        || keywords.some(k => k && blockText.includes(k.replace(/\s+/g, '')));
+      if (hasKeyword) {
+        usedBlocks.add(j);
+        return { ...s, blockIndex: j, idx: i };
+      }
+    }
+    return { ...s, blockIndex: -1, idx: i };
+  });
+
+  // 重新组装 HTML，把 [n] 插到匹配段落的末尾
+  const newBlocks = blocks.map((b, j) => {
+    const citesForBlock = matchedSources
+      .filter(s => s.blockIndex === j)
+      .map(s => {
+        const docId = s.document_id || '';
+        const filename = (s.filename || '资料片段').replace(/[<>"']/g, '');
+        return `<sup class="cite-ref" data-doc-id="${docId}" data-idx="${s.idx}" data-filename="${escapeHtml(filename)}" title="查看引用：${escapeHtml(filename)}">[${s.idx + 1}]</sup>`;
+      })
+      .join('');
+    return b + (citesForBlock || '');
+  });
+
+  // 未匹配到的 source 加到末尾
+  const unmatched = matchedSources.filter(s => s.blockIndex === -1);
+  if (unmatched.length) {
+    const tail = unmatched.map(s => {
+      const docId = s.document_id || '';
+      const filename = (s.filename || '资料片段').replace(/[<>"']/g, '');
+      return `<sup class="cite-ref" data-doc-id="${docId}" data-idx="${s.idx}" data-filename="${escapeHtml(filename)}" title="查看引用：${escapeHtml(filename)}">[${s.idx + 1}]</sup>`;
+    }).join('');
+    newBlocks.push(tail);
+  }
+
+  textEl.innerHTML = newBlocks.join('<br><br>');
+
+  // 绑定点击跳转
+  textEl.querySelectorAll('.cite-ref').forEach(ref => {
+    if (ref.dataset.bound) return;
+    ref.dataset.bound = '1';
+    ref.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const docId = ref.dataset.docId;
+      if (docId) {
+        window.location.hash = '#/library';
+        setTimeout(() => {
+          if (typeof window.viewDocumentById === 'function') {
+            window.viewDocumentById(parseInt(docId));
+          } else {
+            showToast(`已跳转到资料库（${ref.dataset.filename}）`, 'info');
+          }
+        }, 300);
+      } else {
+        showToast('未关联具体文档', 'info');
+      }
+    });
+  });
 }
