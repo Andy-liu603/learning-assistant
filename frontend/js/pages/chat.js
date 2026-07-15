@@ -103,10 +103,11 @@ export async function renderChatPage() {
       data => {
         aiMsg.querySelector('.typing-dots')?.remove();
         if (data.sources && data.sources.length) {
-          // 把引用 [1][2][3] 分散注入到回复中各段落的末尾（紧跟原文）
           injectInlineCitations(textEl, data.sources);
         }
         loadConversationList();
+        // v2.5: 对话后异步更新用户画像（fire-and-forget）
+        updateUserProfile(message, textEl.dataset.raw || textEl.textContent || '');
       },
       err => {
         aiMsg.querySelector('.typing-dots')?.remove();
@@ -365,4 +366,17 @@ function injectInlineCitations(textEl, sources) {
       }
     });
   });
+}
+
+/**
+ * v2.5: 对话后异步提取用户画像（静默，不影响对话体验）
+ */
+async function updateUserProfile(userMessage, replyText) {
+  if (!userMessage || !replyText) return;
+  try {
+    await api.post('/profile/update', {
+      user_message: userMessage,
+      reply_text: replyText
+    });
+  } catch (e) { /* 静默忽略 */ }
 }

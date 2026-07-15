@@ -47,9 +47,12 @@ export async function renderProgressPage() {
 
     <h3 class="section-title mt-4">需加强的知识点</h3>
     <div id="weakList"></div>
+
+    <div id="profileCard" class="mt-4"></div>
   `;
 
   await loadAllData();
+  loadUserProfile();
 }
 
 async function loadAllData() {
@@ -264,4 +267,29 @@ function renderWeakPoints(d) {
       `).join('')}
     </ul>
   `;
+}
+
+/* v2.5 — 长期用户记忆：AI 眼中的你 */
+async function loadUserProfile() {
+  const el = document.getElementById('profileCard');
+  if (!el) return;
+  try {
+    const data = await api.get('/profile');
+    if (!data || (!data.learning_style && !data.confusion_patterns && !data.recent_insights)) {
+      el.innerHTML = `
+        <div class="profile-card">
+          <h3 class="section-title">AI 眼中的你</h3>
+          <p class="text-secondary">多聊几次后，这里会出现你的学习画像 ✨</p>
+        </div>`;
+      return;
+    }
+    el.innerHTML = `
+      <div class="profile-card">
+        <h3 class="section-title">AI 眼中的你</h3>
+        ${data.learning_style ? `<div class="profile-item"><span class="profile-label">学习风格</span><p>${escapeHtml(data.learning_style)}</p></div>` : ''}
+        ${data.confusion_patterns ? `<div class="profile-item"><span class="profile-label">常见困惑</span><p>${escapeHtml(data.confusion_patterns)}</p></div>` : ''}
+        ${data.recent_insights ? `<div class="profile-item"><span class="profile-label">近期观察</span><p>${escapeHtml(data.recent_insights)}</p></div>` : ''}
+        <p class="text-xs text-secondary" style="margin-top:12px">这些信息仅用于优化你的学习体验，只有你能看到</p>
+      </div>`;
+  } catch (e) { /* ignore */ }
 }

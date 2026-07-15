@@ -199,3 +199,42 @@ def generate_practice():
         StudySessionDAO.create(document_id, session_type="practice", user_id=g.user_id)
 
     return jsonify({"content": result})
+
+
+# ─── v2.5: 长期用户记忆系统 ───
+
+@chat_bp.route("/api/profile/update", methods=["POST"])
+@require_auth
+def update_profile():
+    """对话后异步提取用户画像（fire-and-forget）"""
+    data = request.get_json() or {}
+    user_message = data.get("user_message", "")
+    reply_text = data.get("reply_text", "")
+    if not user_message or not reply_text:
+        return jsonify({"status": "skipped", "reason": "empty input"}), 200
+
+    try:
+        profile = llm_service.extract_user_profile(user_message, reply_text)
+        if profile:
+            from models.database import UserProfileDAO
+            UserProfileDAO.upsert(
+                g.user_id,
+                learning_style=profile.get("learning_style"),
+                confusion_patterns=profile.get("confusion_patterns"),
+                recent_insights=profile.get("recent_insights")
+            )
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 200  # 不返回 500，静默处理
+
+
+@chat_bp.route("/api/profile", methods=["GET"])
+@require_auth
+def get_profile():
+    """获取当前用户画像"""
+    try:
+        from models.database import UserProfileDAO
+        profile = UserProfileDAO.get(g.user_id)
+        return jsonify(profile or {"profile_text": "", "learning_style": "", "confusion_patterns": "", "recent_insights": ""})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -90,8 +90,8 @@ if not DATABASE_PATH.is_absolute():
     DATABASE_PATH = BASE_DIR / DATABASE_PATH
 
 # 向量数据库
-CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
-CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
+CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "800"))
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "150"))
 
 # Embedding 模型：优先使用本地目录（离线），其次在线下载
 _LOCAL_MINI_LM = BASE_DIR / "embedding_model" / "all-MiniLM-L6-v2"

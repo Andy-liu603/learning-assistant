@@ -237,7 +237,7 @@ class LLMService:
                 f"用户问题：{user_message}"
             )
 
-        full_messages = [{"role": "system", "content": self.system_prompt}]
+        full_messages = [{"role": "system", "content": self._build_system_prompt(user_id)}]
         full_messages.extend(message_list)
         full_messages.append({"role": "user", "content": enhanced_content})
 
@@ -276,7 +276,7 @@ class LLMService:
                 f"用户问题：{user_message}"
             )
 
-        full_messages = [{"role": "system", "content": self.system_prompt}]
+        full_messages = [{"role": "system", "content": self._build_system_prompt(user_id)}]
         full_messages.extend(message_list)
         full_messages.append({"role": "user", "content": enhanced_content})
 
@@ -721,6 +721,67 @@ class LLMService:
             return json.loads(raw).get("knowledge_points", [])
         except (json.JSONDecodeError, RuntimeError, KeyError):
             return []
+
+    # ─── v2.5: 长期用户记忆系统 ───
+
+    def _build_system_prompt(self, user_id: int = None) -> str:
+        """构建 system prompt，注入用户画像"""
+        prompt = self.system_prompt
+        if user_id:
+            try:
+                from models.database import UserProfileDAO
+                profile = UserProfileDAO.get(user_id)
+                if profile and profile.get('profile_text'):
+                    prompt += f"\n\n## 用户学习画像\n{profile['profile_text']}\n"
+            except Exception:
+                pass
+        return prompt
+
+    def extract_user_profile(self, user_message: str, reply_text: str) -> dict:
+        """
+        从一轮对话中提取用户学习画像
+        返回: {learning_style, confusion_patterns, recent_insights} 或 {}
+        """
+        try:
+            profile_prompt = (
+                "You are analyzing a tutoring conversation to understand the learner.\n"
+                "Based on this exchange:\n\n"
+                f"User: {user_message}\nAI: {reply_text}\n\n"
+                "Output JSON with these fields:\n"
+                "- learning_style: what analogies, depth, pace does this user prefer? (1-2 sentences)\n"
+                "- confusion_patterns: what concepts do they struggle with? (1-2 sentences)\n"
+                "- recent_insights: 1 new observation from THIS conversation only\n\n"
+                "Keep each field short. Only report what you observed. Output ONLY valid JSON, no markdown."
+            )
+            response = self.stream_generate_sync(profile_prompt, 200)
+            # 清理 JSON
+            import json, re
+            raw = response.strip()
+            raw = re.sub(r'^```(?:json)?\s*|\s*```$', '', raw).strip()
+            return json.loads(raw)
+        except Exception:
+            return {}
+
+    def stream_generate_sync(self, user_message: str, max_tokens: int = 200) -> str:
+        """非流式快速对话（用于画像提取等内部任务）"""
+        import httpx
+        model_config = get_current_model() or {}
+        client = _get_client(model_config.get('provider', 'deepseek'))
+        full_messages = [
+            {"role": "system", "content": "你是学习分析助手。输出纯 JSON，不要 markdown。"},
+            {"role": "user", "content": user_message}
+        ]
+        try:
+            response = client.chat.completions.create(
+                model=model_config.get('model', 'deepseek-chat'),
+                messages=full_messages,
+                temperature=0.3,
+                max_tokens=max_tokens,
+                timeout=20
+            )
+            return response.choices[0].message.content or ""
+        except Exception:
+            return ""
 
 
 # 兼容旧代码的别名

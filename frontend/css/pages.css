@@ -883,3 +883,32 @@
 .plan-timeline { margin-top: 8px; }
 .plan-day { transition: border-color var(--dur-fast) var(--ease-out); }
 .plan-day:hover { border-color: var(--rust) !important; }
+
+/* v2.5 — AI 眼中的你 画像卡片 */
+.profile-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-top: 3px solid #8B5CF6;
+  border-radius: var(--border-radius-lg);
+  padding: 20px 24px;
+}
+.profile-item { margin-bottom: 14px; }
+.profile-item:last-child { margin-bottom: 0; }
+.profile-label {
+  display: inline-block;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: #8B5CF6;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+  background: rgba(139, 92, 246, 0.08);
+  border-radius: 3px;
+}
+.profile-item p {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  margin: 6px 0 0;
+  line-height: 1.6;
+}

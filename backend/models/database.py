@@ -941,3 +941,65 @@ class RssSourceDAO:
         conn.execute("DELETE FROM rss_sources WHERE id = ?", (source_id,))
         conn.commit()
         conn.close()
+
+
+class UserProfileDAO:
+    """用户学习画像 — v2.5 长期记忆系统"""
+
+    @staticmethod
+    def upsert(user_id, learning_style=None, confusion_patterns=None, recent_insights=None):
+        """插入或更新用户画像，自动生成 profile_text"""
+        conn = get_db()
+        existing = conn.execute(
+            "SELECT * FROM user_profiles WHERE user_id = ?", (user_id,)
+        ).fetchone()
+
+        if existing:
+            ls = existing["learning_style"] or ""
+            cp = existing["confusion_patterns"] or ""
+            ri = existing["recent_insights"] or ""
+
+            if learning_style and learning_style not in ls:
+                ls = (ls + "；" + learning_style) if ls else learning_style
+            if confusion_patterns and confusion_patterns not in cp:
+                cp = (cp + "；" + confusion_patterns) if cp else confusion_patterns
+            # recent_insights: 覆盖而非追加
+            ri = recent_insights or ri
+
+            profile_text = UserProfileDAO._build_text(ls, cp, ri)
+            conn.execute(
+                "UPDATE user_profiles SET learning_style=?, confusion_patterns=?, recent_insights=?, profile_text=?, updated_at=CURRENT_TIMESTAMP WHERE user_id=?",
+                (ls, cp, ri, profile_text, user_id)
+            )
+        else:
+            ls = learning_style or ""
+            cp = confusion_patterns or ""
+            ri = recent_insights or ""
+            profile_text = UserProfileDAO._build_text(ls, cp, ri)
+            conn.execute(
+                "INSERT INTO user_profiles (user_id, learning_style, confusion_patterns, recent_insights, profile_text) VALUES (?,?,?,?,?)",
+                (user_id, ls, cp, ri, profile_text)
+            )
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def get(user_id):
+        conn = get_db()
+        row = conn.execute(
+            "SELECT * FROM user_profiles WHERE user_id = ?", (user_id,)
+        ).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    @staticmethod
+    def _build_text(learning_style, confusion_patterns, recent_insights):
+        parts = []
+        if learning_style:
+            parts.append(f"学习风格：{learning_style}")
+        if confusion_patterns:
+            parts.append(f"常见困惑：{confusion_patterns}")
+        if recent_insights:
+            parts.append(f"近期观察：{recent_insights}")
+        text = "。".join(parts)
+        return text[:500]  # 硬截断，控制 token 预算
