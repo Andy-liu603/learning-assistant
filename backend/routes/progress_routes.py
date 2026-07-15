@@ -288,18 +288,20 @@ def get_mastery():
 
     conn.close()
 
-    # 五级掌握度映射
-    def calc_mastery_level(avg_score, assess_count, mastery_level):
+    # 五级掌握度映射（v2.5：L2备选路径 + L3薄弱点消除判定）
+    def calc_mastery_level(avg_score, assess_count, weak_count):
         if assess_count == 0:
-            return 0  # L0 未接触
+            return 0                     # L0 未接触
         if assess_count >= 3 and avg_score >= 90:
-            return 4  # L4 专家
-        if assess_count >= 2 and avg_score >= 80:
-            return 3  # L3 精通
+            return 4                     # L4 专家
+        if assess_count >= 2 and avg_score >= 80 and weak_count == 0:
+            return 3                     # L3 精通（新增：薄弱点已消除）
+        if assess_count >= 2 and avg_score >= 50:
+            return 2                     # L2 熟悉（新增：备选路径，≥2次且均分≥50）
         if assess_count >= 1 and avg_score >= 60:
-            return 2  # L2 熟悉
+            return 2                     # L2 熟悉
         if assess_count >= 1:
-            return 1  # L1 入门
+            return 1                     # L1 入门
         return 0
 
     level_names = {0: "未接触", 1: "入门", 2: "熟悉", 3: "精通", 4: "专家"}
@@ -349,10 +351,14 @@ def get_mastery():
             "document_id": r["document_id"]
         })
 
-    # 文档掌握度
+    # 文档掌握度（v2.5：传入每文档的 L0/L1 知识点数作为 weak_count）
     doc_mastery = []
     for r in doc_rows:
-        lvl = calc_mastery_level(r["avg_score"], r["assess_count"], r["status"])
+        weak_count = sum(
+            1 for kp in knowledge_points
+            if kp["document_id"] == r["document_id"] and kp["level"] <= 1
+        )
+        lvl = calc_mastery_level(r["avg_score"], r["assess_count"], weak_count)
         doc_mastery.append({
             "document_id": r["document_id"],
             "filename": r["filename"],

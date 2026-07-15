@@ -6,6 +6,8 @@ openai==1.68.2
 # === 向量数据库 ===
 chromadb==1.2.2
 sentence-transformers==4.1.0
+# ONNX 加速（可选，2-3x 嵌入提速）：pip install optimum onnxruntime
+# 启用方式：set EMBEDDING_ONNX=1 后启动
 
 # === 文档解析 ===
 PyMuPDF==1.25.5

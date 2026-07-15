@@ -121,6 +121,13 @@ def create_app():
     init_db()
     run_migrations()
 
+    # 向量集合迁移（v2.5：每文档独立集合 → 每用户统一集合）
+    try:
+        from services.vector_store import VectorStore
+        VectorStore().migrate_legacy_collections()
+    except Exception as e:
+        log.warning(f"向量库迁移跳过: {e}")
+
     # 健康检查
     @app.route("/api/health", methods=["GET"])
     def health_check():
