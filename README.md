@@ -1,42 +1,21 @@
-# 学习助手 v2.5 · AI PM 实习作品集
+# AI 学习助手 v2.5
 
-> **从 0 到 1 设计并交付的 AI 原生产品** — 面向知识工作者的 RAG 增强全科学习系统
+> RAG 增强个人学习系统 — 上传资料、AI 问答、掌握度追踪，形成学习闭环。
 
-[![Version](https://img.shields.io/badge/version-2.5-rust)](.) [![Test](https://img.shields.io/badge/tests-28%20passed-success)](.) [![Security](https://img.shields.io/badge/security-audited-success)](docs/08-安全检查报告.md)
-
-## 为什么这个项目展示 AI PM 能力
-
-面试官看一个 PM 候选人的项目时，关心的不是你写了多少代码，而是**你是否像 PM 一样思考**。
-
-| 产品思维 | 本项目对应产出 | 链接 |
-|---------|--------------|------|
-| 用户洞察 | 3 个用户画像 + JTBD 分析 | [01-PRD产品需求文档.md](docs/01-PRD产品需求文档.md) |
-| 竞品分析 | 6 维度竞品对比（Notion AI/Anki/Readwise） | [01-PRD产品需求文档.md](docs/01-PRD产品需求文档.md) |
-| 需求优先级 | P0/P1/P2 功能矩阵，v1.0→v2.4 分阶段交付 | [01-PRD产品需求文档.md](docs/01-PRD产品需求文档.md) |
-| 技术决策 | "为什么用 Vanilla JS 而不是 React"的产品逻辑 | [07-前端技术选型说明.md](docs/07-前端技术选型说明.md) |
-| 量化评估 | RAGAS 回答质量 7.5/10 + 自实验设计 | [评估结果](tests/evaluation/eval_results.json) |
-| 安全合规 | XSS/SQL注入/CSRF 五维安全审计 | [08-安全检查报告.md](docs/08-安全检查报告.md) |
-| 用户体验 | 5 条操作路径可用性测试（评分 4.3/5） | [09-UX用户体验报告.md](docs/09-UX用户体验报告.md) |
-
-**我不是只会写代码——我是从"用户为什么需要这个"开始，到"怎么验证做对了"结束的完整产品闭环。**
+[![Version](https://img.shields.io/badge/version-2.5-blue)](.) [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Tests](https://img.shields.io/badge/tests-28%20passed-brightgreen)](.)
 
 ## 产品定位
 
-学习助手是一个 **个人 RAG 增强学习系统**，核心价值主张是：**将"阅读"变成"掌握"的量化学习过程**。
+将「阅读」变成「掌握」的量化学习过程：上传资料 → 自动解析+向量化 → AI 问答+出题 → 掌握度追踪 → 学习闭环。
 
-```
-用户上传学习资料 → 自动解析 + 向量化 → AI问答 + 自动出题 + 掌握度追踪 → 学习闭环
-```
+## 版本历程
 
-## 从 v1.0 到 v2.5 的产品演进
-
-| 版本 | 产品阶段 | 核心假设 | 验证结论 |
-|------|---------|---------|---------|
-| v1.0 | 概念验证 | "RAG 能提升学习效率吗？" | ✅ 文档问答质量 7.5/10 |
-| v2.0 | MVP | "用户愿意注册使用吗？" | ✅ JWT 多用户架构落地 |
-| v2.3 | 增长 | "用户会反复使用吗？" | ✅ 测评+进度+报告形成闭环 |
-| v2.4 | 通用化 | "非PM用户也能用吗？" | ✅ 全科定位 + 学习计划 + 仪表盘 |
-| v2.5 | 深度化 | "AI 能真正理解学习者吗？" | ✅ 统一向量集合 + 语义切分 + 长期用户记忆 |
+| 版本 | 阶段 | 核心能力 |
+|------|------|---------|
+| v2.5 | 深度化 | 统一向量集合 + 语义切分 + 长期用户记忆（AI 眼中的你） |
+| v2.4 | 通用化 | 全科定位 + 学习计划 + 学习仪表盘 |
+| v2.3 | 增长 | 多模态（GLM-4.6V）+ 测评闭环 |
+| v2.1 | 起步 | 杂志大刊风 AI 学习助手 |
 
 ## 技术架构
 
@@ -84,26 +63,22 @@ python backend/app.py
 
 ## 技术栈
 
-| 层级 | 技术 | 选择理由 |
-|------|------|---------|
-| 后端 | Flask 3.1 | 个人项目不需要 Django 的重量，不需要 FastAPI 的异步 |
-| 数据库 | SQLite + ChromaDB | 零配置部署，v2.5 统一向量集合，HNSW 索引 |
-| LLM | DeepSeek + GLM-4.6V | OpenAI 兼容协议，多 Provider 热切换 |
-| 嵌入 | BGE-small-zh-v1.5 | 本地运行，512维，离线可用，v2.5 可选 ONNX 加速 |
-| 切分 | 中文句感知 + 表格保护 | v2.5 升级：6级分隔符递归切分，chunk=800, overlap=150 |
-| 前端 | Vanilla JS SPA | MVP 阶段不需要 React 的复杂度（详见选型文档） |
-| 质量 | pytest 28用例 + Swagger + Limiter | 测试覆盖核心 + 文档自动生成 + 速率保护 |
+- **后端**: Flask 3.1（8 蓝图，55+ API）+ JWT + 速率限制
+- **数据**: SQLite（15 表）+ ChromaDB（统一集合，HNSW 索引）
+- **AI**: DeepSeek + GLM-4.6V（OpenAI 兼容协议）+ BGE-small-zh-v1.5 本地嵌入
+- **前端**: Vanilla JS SPA（Hash 路由）+ ECharts + IndexedDB
+- **质量**: pytest 28 用例 + Swagger 文档 + 安全审计
 
-## v2.5 新增
+## v2.5 核心更新
 
-| 能力 | 说明 |
-|------|------|
-| 统一向量集合 | 每用户一个 ChromaDB collection，跨文档检索 1 次 query |
-| 语义切分 | 中文句感知 + 表格保护，chunk 800/overlap 150 |
-| 长期用户记忆 | 对话后 LLM 提取学习画像，system prompt 注入，"AI 眼中的你" 卡片 |
-| 掌握度阈值优化 | L2 备选路径 + L3 薄弱点消除判定 |
+- **统一向量集合** — 每用户一个 ChromaDB collection，跨文档一次检索
+- **语义切分升级** — 中文句感知 + 表格保护，chunk=800 / overlap=150
+- **长期用户记忆** — 对话后提取学习画像，注入 system prompt（"AI 眼中的你"）
+- **掌握度阈值优化** — L2 备选路径 + L3 薄弱点消除
+
+详细变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 许可
 
-个人作品集项目 — 展示 AI PM 全链路能力（需求分析 → 技术决策 → 产品交付 → 量化验证）。
+[MIT](LICENSE) · 个人作品集，展示 AI 应用全链路能力。
 
