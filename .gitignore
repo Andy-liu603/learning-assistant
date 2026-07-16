@@ -1,38 +1,67 @@
-# Python
+# ===== Python =====
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-venv/
-.env
+*.egg-info/
+.eggs/
+build/
+dist/
 
-# 数据
-data/uploads/*
-data/vector_db/*
-data/reports/*
+# ===== Virtual environments =====
+venv/
+.venv/
+env/
+
+# ===== Environment & secrets =====
+.env
+.env.*
+!.env.example
+
+# ===== Data: generated / runtime (NEVER commit) =====
+data/vector_db/
+data/vector_db_backup/
+data/uploads/
+data/reports/
 data/*.db
+data/**/*.db
+data/**/*.sqlite3
+data/**/*.bin
+data/**/*.parquet
 !data/.gitkeep
 
-# IDE
+# ===== Database binaries at root =====
+*.db
+*.sqlite3
+
+# ===== Test & tool caches =====
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ===== IDE / Editor =====
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS
+# ===== OS =====
 Thumbs.db
 .DS_Store
 
-# Logs
+# ===== Logs =====
 logs/
 *.log
 
-# Large model binaries
+# ===== Large model binaries =====
 *.safetensors
+*.gguf
 
-# Root-level db
-chemai.db
-
-# WorkBuddy workspace
+# ===== WorkBuddy workspace =====
 .workbuddy/
+
+# ===== Project AI config (keep private) =====
 CLAUDE.md
